@@ -14,7 +14,9 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
   const [isVisible, setIsVisible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
 
   const displayImage = campaign.thumbnailUrl || aiImageUrl;
 
@@ -34,6 +36,16 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
     }
 
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -85,22 +97,38 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
     }
   };
 
+  const shareCampaign = (platform: string) => {
+    const url = `https://adauction.io/campaign/${campaign.id}`;
+    const text = encodeURIComponent(`این کمپین جذاب در AdAuction رو ببین: ${campaign.title}`);
+    
+    let shareUrl = '';
+    switch (platform) {
+      case 'telegram': shareUrl = `https://t.me/share/url?url=${url}&text=${text}`; break;
+      case 'whatsapp': shareUrl = `https://wa.me/?text=${text}%20${url}`; break;
+      case 'x': shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`; break;
+      case 'copy':
+        navigator.clipboard.writeText(url);
+        alert('لینک کپی شد!');
+        setShowShareMenu(false);
+        return;
+    }
+    if (shareUrl) window.open(shareUrl, '_blank');
+    setShowShareMenu(false);
+  };
+
   return (
     <div 
       ref={cardRef}
       className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500 group relative overflow-hidden flex flex-col h-full"
     >
-      {/* Fixed Aspect Ratio Image Container */}
+      {/* Image Container */}
       <div className="relative w-full aspect-[16/9] overflow-hidden bg-slate-50 shrink-0">
-        
-        {/* Placeholder: Initial Skeleton */}
         {!isVisible && (
           <div className="absolute inset-0 bg-slate-100 flex items-center justify-center animate-pulse">
             <div className="w-10 h-10 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin opacity-40" />
           </div>
         )}
 
-        {/* Placeholder: AI Generating State */}
         {isVisible && isGenerating && (
           <div className="absolute inset-0 z-10 bg-gradient-to-br from-slate-100 via-white to-slate-50 flex flex-col items-center justify-center animate-in fade-in duration-500">
             <div className="relative">
@@ -109,14 +137,10 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
             </div>
             <div className="mt-4 flex flex-col items-center gap-1">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Designing Asset...</span>
-              <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 w-1/2 animate-[progress_2s_infinite_linear]" style={{ backgroundSize: '200% 100%' }} />
-              </div>
             </div>
           </div>
         )}
 
-        {/* Main Image Layer */}
         {displayImage && (
           <img 
             src={displayImage} 
@@ -126,16 +150,6 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
               isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
           />
-        )}
-
-        {/* Fallback: If no image and not generating */}
-        {isVisible && !isGenerating && !displayImage && (
-          <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-slate-300 gap-3">
-             <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-sm border border-slate-200/50 group-hover:scale-110 transition-transform duration-500">
-               {getPlatformIcon(campaign.platform)}
-             </div>
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">No Asset Available</span>
-          </div>
         )}
         
         {/* Floating Badges */}
@@ -149,20 +163,12 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
               <span className="text-sm transition-transform duration-500 group-hover:rotate-12">{getPlatformIcon(campaign.platform)}</span>
               <span className="tracking-tight">{campaign.platform}</span>
             </div>
-
             {showTooltip && (
               <div className="absolute top-full left-0 mt-2 whitespace-nowrap bg-slate-900 text-white text-[9px] font-black px-3 py-1.5 rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-200 z-50">
                 پلتفرم مورد نیاز: {campaign.platform}
-                <div className="absolute -top-1 left-4 w-2 h-2 bg-slate-900 rotate-45"></div>
               </div>
             )}
           </div>
-          
-          {campaign.expirationDate && (
-            <div className="bg-rose-500/90 backdrop-blur-md text-white px-3 py-1.5 text-[9px] font-black rounded-xl shadow-lg shadow-rose-200/40 border border-white/20 uppercase tracking-tighter pointer-events-auto">
-              ⏳ {campaign.expirationDate}
-            </div>
-          )}
         </div>
       </div>
 
@@ -179,7 +185,6 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
         </div>
         
         <h3 className="font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors leading-relaxed text-base line-clamp-1 flex items-center gap-2">
-          <span className="shrink-0 grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-110">{getPlatformIcon(campaign.platform)}</span>
           {campaign.title}
         </h3>
         
@@ -212,17 +217,45 @@ const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onViewDetails }) 
                 alt="Bidder"
               />
             ))}
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 border-2 border-white flex items-center justify-center text-[9px] text-indigo-600 font-black shadow-sm ring-1 ring-slate-100">
-              +{campaign.bids.length}
-            </div>
           </div>
-          <button 
-            onClick={() => onViewDetails(campaign)}
-            className="text-xs font-black text-white bg-indigo-600 px-5 py-2.5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 flex items-center gap-2"
-          >
-            مشاهده جزئیات
-            <span className="text-[10px]">➜</span>
-          </button>
+          
+          <div className="flex items-center gap-2 relative">
+             <div className="relative" ref={shareMenuRef}>
+               <button 
+                 onClick={() => setShowShareMenu(!showShareMenu)}
+                 className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${showShareMenu ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                 title="اشتراک‌گذاری"
+               >
+                 📤
+               </button>
+
+               {showShareMenu && (
+                 <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 flex flex-col gap-1 z-[100] animate-in fade-in slide-in-from-bottom-2 zoom-in-95 min-w-[120px]">
+                   <button onClick={() => shareCampaign('copy')} className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 transition-colors">
+                     <span>🔗</span> کپی لینک
+                   </button>
+                   <button onClick={() => shareCampaign('telegram')} className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 transition-colors">
+                     <span>✈️</span> تلگرام
+                   </button>
+                   <button onClick={() => shareCampaign('whatsapp')} className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 transition-colors">
+                     <span>💬</span> واتس‌اپ
+                   </button>
+                   <button onClick={() => shareCampaign('x')} className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 transition-colors">
+                     <span>🐦</span> توییتر (X)
+                   </button>
+                   <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b border-r border-slate-100 -mt-1.5"></div>
+                 </div>
+               )}
+             </div>
+
+             <button 
+               onClick={() => onViewDetails(campaign)}
+               className="text-xs font-black text-white bg-indigo-600 px-5 py-2.5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 flex items-center gap-2"
+             >
+               مشاهده جزئیات
+               <span className="text-[10px]">➜</span>
+             </button>
+          </div>
         </div>
       </div>
     </div>

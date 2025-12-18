@@ -21,23 +21,23 @@ const App: React.FC = () => {
   const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
   
   const [apiKeys, setApiKeys] = useState<{key: string, label: string, date: string}[]>([
-    { key: 'ix_live_4839201938bdf2819', label: 'تولید (Production)', date: '۱۴۰۲/۰۹/۱۵' }
+    { key: 'aa_live_4839201938bdf2819', label: 'تولید (Production)', date: '۱۴۰۲/۰۹/۱۵' }
   ]);
 
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    const saved = localStorage.getItem('influex_campaigns');
+    const saved = localStorage.getItem('adauction_campaigns');
     return saved ? JSON.parse(saved) : MOCK_CAMPAIGNS as any;
   });
 
   const [currentUser, setCurrentUser] = useState<User>(() => {
-    const saved = localStorage.getItem('influex_user');
+    const saved = localStorage.getItem('adauction_user');
     return saved ? JSON.parse(saved) : MOCK_USER;
   });
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('influex_campaigns', JSON.stringify(campaigns));
+    localStorage.setItem('adauction_campaigns', JSON.stringify(campaigns));
   }, [campaigns]);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -64,7 +64,7 @@ const App: React.FC = () => {
 
   const handleGenerateApiKey = () => {
     const newKey = {
-      key: `ix_test_${Math.random().toString(36).substr(2, 16)}`,
+      key: `aa_test_${Math.random().toString(36).substr(2, 16)}`,
       label: 'تست جدید',
       date: 'هم‌اکنون'
     };
@@ -166,6 +166,7 @@ const App: React.FC = () => {
         <NegotiationModal 
           campaign={selectedCampaign} 
           userRole={currentUser.role}
+          userNiche={currentUser.niche.join(', ')}
           onClose={() => setSelectedCampaign(null)} 
           onUpdateStatus={updateCampaignStatus}
         />

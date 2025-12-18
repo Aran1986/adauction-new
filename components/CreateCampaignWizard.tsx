@@ -201,7 +201,7 @@ const CreateCampaignWizard: React.FC<CreateCampaignWizardProps> = ({ onClose, on
                 <label className="block text-sm font-bold text-slate-700 mb-2">عنوان پایه کمپین</label>
                 <input 
                   type="text" 
-                  placeholder="مثلا: معرفی کالکشن تابستانه"
+                  placeholder="مثلا: معرفی کالکشن تابستانه برند X"
                   value={baseData.title}
                   onChange={e => setBaseData({...baseData, title: e.target.value})}
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
@@ -211,7 +211,7 @@ const CreateCampaignWizard: React.FC<CreateCampaignWizardProps> = ({ onClose, on
                 <label className="block text-sm font-bold text-slate-700 mb-2">توضیحات بریف (کپی برای تمام واحدها)</label>
                 <textarea 
                   rows={4}
-                  placeholder="سناریو و اهداف کلی برند را بنویسید..."
+                  placeholder="جزئیات سناریو، هشتگ‌های مورد نظر و اهداف کلی برند را به صورت شفاف بنویسید..."
                   value={baseData.description}
                   onChange={e => setBaseData({...baseData, description: e.target.value})}
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
@@ -222,19 +222,20 @@ const CreateCampaignWizard: React.FC<CreateCampaignWizardProps> = ({ onClose, on
                   <label className="block text-sm font-bold text-slate-700 mb-2">بودجه پایه هر واحد (تومان)</label>
                   <input 
                     type="number"
+                    placeholder="مثلا ۵,۰۰۰,۰۰۰"
                     value={baseData.globalBudget || ''}
                     onChange={e => setBaseData({...baseData, globalBudget: Number(e.target.value)})}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">ددلاین پیشنهادی</label>
                   <input 
                     type="text"
-                    placeholder="۱۴۰۳/۰۶/۰۱"
+                    placeholder="مثلا ۱۴۰۳/۱۲/۲۹"
                     value={baseData.globalDeadline}
                     onChange={e => setBaseData({...baseData, globalDeadline: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                   />
                 </div>
               </div>
@@ -348,6 +349,7 @@ const CreateCampaignWizard: React.FC<CreateCampaignWizardProps> = ({ onClose, on
                         <label className="text-[9px] font-black text-slate-400 mb-1 block">بودجه واحد (تومان)</label>
                         <input 
                           type="number"
+                          placeholder="بودجه اختصاصی"
                           value={item.budget}
                           onChange={e => {
                             const newItems = [...batchItems];
@@ -361,6 +363,7 @@ const CreateCampaignWizard: React.FC<CreateCampaignWizardProps> = ({ onClose, on
                         <label className="text-[9px] font-black text-slate-400 mb-1 block">حداقل فالوئر</label>
                         <input 
                           type="number"
+                          placeholder="تعداد فالوئر"
                           value={item.minFollowers}
                           onChange={e => {
                             const newItems = [...batchItems];

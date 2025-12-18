@@ -6,11 +6,12 @@ import { getNegotiationAdvice } from '../services/geminiService';
 interface NegotiationModalProps {
   campaign: Campaign;
   userRole: UserRole;
+  userNiche?: string;
   onClose: () => void;
   onUpdateStatus: (id: string, newStatus: DealStatus, additionalData?: any) => void;
 }
 
-const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole, onClose, onUpdateStatus }) => {
+const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole, userNiche, onClose, onUpdateStatus }) => {
   const [activeStep, setActiveStep] = useState<'details' | 'chat' | 'escrow'>(
     campaign.status === DealStatus.OPEN ? 'details' : 'escrow'
   );
@@ -20,6 +21,7 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
   // AI Advice State
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
   const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
+  const [refinementText, setRefinementText] = useState('');
 
   // Rating State
   const [showRatingForm, setShowRatingForm] = useState(false);
@@ -54,19 +56,27 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
     setShowRatingForm(false);
   };
 
-  const handleFetchAdvice = async () => {
+  const handleFetchAdvice = async (isRefinement = false) => {
     setIsLoadingAdvice(true);
-    setAiAdvice(null);
+    if (!isRefinement) setAiAdvice(null);
     try {
       const context = `
         Campaign Title: ${campaign.title}
+        Industry/Niche: ${campaign.niche || 'Not specified'}
         Platform: ${campaign.platform}
-        Niche: ${campaign.niche || 'Not specified'}
-        Min Followers Required: ${campaign.minFollowers}
+        Min Followers: ${campaign.minFollowers}
         Description: ${campaign.description}
       `;
-      const advice = await getNegotiationAdvice(userRole, bidAmount, context);
+      const advice = await getNegotiationAdvice(
+        userRole, 
+        bidAmount, 
+        context, 
+        userNiche, 
+        isRefinement ? refinementText : undefined,
+        aiAdvice || undefined
+      );
       setAiAdvice(advice);
+      if (isRefinement) setRefinementText('');
     } catch (error) {
       setAiAdvice("متاسفانه در دریافت مشاوره خطایی رخ داد. لطفا دوباره تلاش کنید.");
     } finally {
@@ -174,7 +184,6 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                         قفل وجه در امانت
                       </button>
                     </div>
-                    <p className="text-[9px] text-amber-600 mt-4 font-bold">با قفل کردن وجه، مبلغ از کیف پول شما کسر و در صندوق امن AdAuction تا پایان پروژه نگهداری می‌شود.</p>
                   </div>
                 )}
               </div>
@@ -191,7 +200,6 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                         سلام، خوشحالم از همکاری. بله، با توجه به حجم کار و بریف ارائه شده، این مبلغ مورد تایید است. لطفاً وجه را در سیستم اسکرو (امانت) فعال کنید تا کار را استارت بزنم.
                      </div>
                      
-                     {/* AI Advice Display - User Friendly UI */}
                      {aiAdvice && (
                        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-0.5 rounded-[2.5rem] animate-in slide-in-from-bottom-4 fade-in duration-700 shadow-2xl shadow-indigo-200">
                           <div className="bg-white rounded-[2.4rem] p-7">
@@ -208,9 +216,29 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                             <div className="text-xs text-slate-700 leading-loose whitespace-pre-wrap font-medium">
                                {aiAdvice}
                             </div>
-                            <div className="mt-6 pt-5 border-t border-slate-50 flex justify-between items-center">
-                               <span className="text-[9px] text-slate-400 italic">پیشنهاد شده بر اساس تحلیل هوشمند بریف و بودجه فعلی</span>
-                               <button onClick={handleFetchAdvice} className="text-[10px] font-black text-indigo-600 hover:underline">تحلیل مجدد 🔄</button>
+                            
+                            {/* Refinement UI */}
+                            <div className="mt-6 pt-5 border-t border-slate-100 space-y-4">
+                               <div className="flex gap-2">
+                                 <input 
+                                   type="text"
+                                   placeholder="مثلاً: 'لحن را دوستانه‌تر کن' یا 'روی ROI تمرکز کن'..."
+                                   value={refinementText}
+                                   onChange={e => setRefinementText(e.target.value)}
+                                   className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-[10px] outline-none focus:ring-2 focus:ring-indigo-100"
+                                 />
+                                 <button 
+                                   onClick={() => handleFetchAdvice(true)}
+                                   disabled={!refinementText || isLoadingAdvice}
+                                   className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                                 >
+                                   اعمال تغییرات
+                                 </button>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[9px] text-slate-400 italic">پیشنهاد شده بر اساس تحلیل هوشمند بریف و تخصص شما ({userNiche || 'عمومی'})</span>
+                                 <button onClick={() => handleFetchAdvice()} className="text-[10px] font-black text-indigo-600 hover:underline">تحلیل مجدد 🔄</button>
+                               </div>
                             </div>
                           </div>
                        </div>
@@ -236,10 +264,9 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                   </div>
                 </div>
 
-                {/* AI Advice Trigger Button */}
                 {!aiAdvice && !isLoadingAdvice && (
                   <button 
-                    onClick={handleFetchAdvice}
+                    onClick={() => handleFetchAdvice()}
                     className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] animate-gradient text-white py-5 rounded-[2rem] font-black text-sm shadow-2xl shadow-indigo-200 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-4 group"
                   >
                     <span className="text-2xl group-hover:rotate-12 transition-transform">✨</span>
@@ -338,7 +365,6 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                        <div className="space-y-8 animate-in zoom-in-90 duration-700">
                           <div className="relative">
                              <div className="w-32 h-32 bg-emerald-500 text-white rounded-full flex items-center justify-center text-6xl mx-auto shadow-[0_0_50px_rgba(16,185,129,0.4)] border-8 border-white">🏆</div>
-                             <div className="absolute -bottom-2 right-1/2 translate-x-12 bg-white text-emerald-600 px-4 py-1.5 rounded-full text-[10px] font-black border border-emerald-100 shadow-md">SUCCESSFUL</div>
                           </div>
                           <div>
                             <h3 className="text-3xl font-black text-slate-800">همکاری با موفقیت ثبت شد</h3>
@@ -353,7 +379,6 @@ const NegotiationModal: React.FC<NegotiationModalProps> = ({ campaign, userRole,
                       <div className="text-center">
                         <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-inner">⭐</div>
                         <h3 className="text-2xl font-black text-slate-800 mb-2">ثبت بازخورد نهایی</h3>
-                        <p className="text-xs text-slate-400 font-bold">تجربه شما به سایر کاربران برای تصمیم‌گیری بهتر کمک می‌کند.</p>
                       </div>
 
                       <div className="space-y-8 bg-slate-50 p-10 rounded-[3rem] border border-slate-100 shadow-inner">

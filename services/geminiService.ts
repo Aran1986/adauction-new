@@ -11,22 +11,43 @@ export const generateCampaignDescription = async (productName: string, targetAud
   return response.text;
 };
 
-export const getNegotiationAdvice = async (role: string, currentBudget: number, campaignContext: string) => {
+export const getNegotiationAdvice = async (
+  role: string, 
+  currentBudget: number, 
+  campaignContext: string,
+  userNiche?: string,
+  refinement?: string,
+  previousAdvice?: string
+) => {
   const isBrand = role === 'BRAND';
   const roleTitle = isBrand ? 'Brand (Employer)' : 'Influencer (Content Creator)';
   
-  const prompt = `
-    You are an expert negotiation consultant for social media marketing.
+  let prompt = `
+    You are an expert negotiation consultant for social media marketing on the AdAuction platform.
     User Role: ${roleTitle}
     Current Budget/Offer: ${currentBudget.toLocaleString()} Tomans
-    Context: ${campaignContext}
+    Campaign Context (Industry/Niche): ${campaignContext}
+    User's Specialization/Niche: ${userNiche || 'General'}
 
+    ${refinement ? `
+    The user received this previous advice from you:
+    ---
+    ${previousAdvice}
+    ---
+    Now, the user wants you to ADJUST and REFINE this advice based on the following instruction: "${refinement}".
+    ` : `
+    Provide 3 specific tactical negotiation points in Persian. 
     ${isBrand 
-      ? "The brand wants to ensure high ROI while keeping costs within budget. Provide 3 specific tactical negotiation points in Persian to help the brand negotiate a better deal or more value (e.g., extra stories, longer post life) from the influencer." 
-      : "The influencer wants to maximize their earnings while maintaining a good relationship with the brand. Provide 3 specific tactical negotiation points in Persian to help the influencer justify a higher rate or better terms based on their value."
+      ? "The brand wants high ROI. Focus on how the influencer's specific niche fits the brand's industry and how to negotiate for performance-based bonuses or additional assets (e.g. usage rights)." 
+      : "The influencer wants to justify a higher rate. Focus on their niche authority, engagement metrics, and how their specific audience perfectly matches the brand's industry/target."
     }
-    
-    Format the response with a short encouraging intro, then bullet points for the 3 tactics, and a professional closing. Use a professional, persuasive, and polite Persian tone.
+    `}
+
+    Format the response in Persian:
+    1. A short, professional acknowledgment of the context/refinement.
+    2. 3 detailed bullet points for the tactics.
+    3. A short closing statement.
+    Keep the tone professional, data-driven, and persuasive.
   `;
 
   const response = await ai.models.generateContent({
@@ -54,7 +75,6 @@ export const generateCampaignImage = async (title: string, description: string) 
       },
     });
 
-    // Check if we have candidates and content
     if (!response.candidates || response.candidates.length === 0 || !response.candidates[0].content) {
       throw new Error("No image generated: empty response candidates");
     }
@@ -70,7 +90,6 @@ export const generateCampaignImage = async (title: string, description: string) 
       }
     }
 
-    // If we got text back instead of an image, log it and throw
     const textOutput = response.text;
     if (textOutput) {
       console.warn("Model returned text instead of image:", textOutput);
