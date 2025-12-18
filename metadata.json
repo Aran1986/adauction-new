@@ -1,0 +1,8 @@
+{
+  "name": "AdAuction - SaaS Influence Marketplace",
+  "description": "A high-end SaaS platform connecting brands and influencers with escrow payments, bidding systems, and AI-powered negotiation tools.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
