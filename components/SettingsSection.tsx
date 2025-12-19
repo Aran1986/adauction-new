@@ -1,11 +1,17 @@
 
 import React, { useState } from 'react';
+import { User, UserRole } from '../types';
 
-const SettingsSection: React.FC = () => {
+interface SettingsSectionProps {
+  currentUser: User;
+  onUpdateRole: (role: UserRole) => void;
+}
+
+const SettingsSection: React.FC<SettingsSectionProps> = ({ currentUser, onUpdateRole }) => {
   const [settings, setSettings] = useState([
     { id: '2fa', label: 'احراز هویت دو مرحله‌ای (2FA)', active: true, desc: 'امنیت ورود به حساب را با تایید پیامکی افزایش دهید.' },
-    { id: 'show_balance', label: 'نمایش موجودی در پیشخوان', active: false, desc: 'موجودی کیف پول را در بخش خلاصه آمار نمایش می‌دهد.' },
-    { id: 'auto_approve', label: 'تایید خودکار پیشنهادات هم‌قیمت بودجه', active: true, desc: 'پیشنهاداتی که دقیقاً مطابق بودجه شما هستند فوراً تایید می‌شوند.' },
+    { id: 'show_balance', label: 'نمایش موجودی در پیشخوان', active: true, desc: 'موجودی کیف پول را در بخش خلاصه آمار نمایش می‌دهد.' },
+    { id: 'auto_approve', label: 'تایید خودکار پیشنهادات هم‌قیمت بودجه', active: false, desc: 'پیشنهاداتی که دقیقاً مطابق بودجه شما هستند فوراً تایید می‌شوند.' },
     { id: 'notif_email', label: 'دریافت اعلان‌ها از طریق ایمیل', active: true, desc: 'گزارش‌های روزانه و پیام‌های جدید به ایمیل شما ارسال شود.' },
   ]);
 
@@ -17,14 +23,43 @@ const SettingsSection: React.FC = () => {
     <div className="max-w-4xl mx-auto bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-sm animate-in fade-in duration-500 pb-20">
       <h3 className="text-2xl font-black text-slate-800 mb-10 flex items-center gap-4">
         <span className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl">⚙️</span>
-        پیکربندی حساب کاربری
+        تنظیمات عملیاتی سیستم
       </h3>
 
       <div className="space-y-12">
+        {/* Role Switched - CRITICAL for Demo Operationality */}
+        <section className="bg-indigo-50 p-8 rounded-[2.5rem] border border-indigo-100">
+          <h4 className="text-sm font-black text-indigo-900 mb-4 flex items-center gap-2">
+            <span>🎭</span> تغییر نقش کاربری (تست سناریو)
+          </h4>
+          <p className="text-[10px] text-indigo-600 mb-6 leading-relaxed">برای تست کامل سیستم "امانت" و "مذاکره"، می‌توانید بین نقش برند و اینفلوئنسر جابجا شوید.</p>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => onUpdateRole(UserRole.INFLUENCER)}
+              className={`flex-1 py-4 rounded-2xl text-xs font-black transition-all ${
+                currentUser.role === UserRole.INFLUENCER 
+                ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' 
+                : 'bg-white text-indigo-400 hover:bg-white/50'
+              }`}
+            >
+              من اینفلوئنسر هستم
+            </button>
+            <button 
+              onClick={() => onUpdateRole(UserRole.BRAND)}
+              className={`flex-1 py-4 rounded-2xl text-xs font-black transition-all ${
+                currentUser.role === UserRole.BRAND 
+                ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' 
+                : 'bg-white text-indigo-400 hover:bg-white/50'
+              }`}
+            >
+              من برند (کارفرما) هستم
+            </button>
+          </div>
+        </section>
+
         <section>
           <div className="flex justify-between items-center mb-6">
             <h4 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">تنظیمات امنیتی و نمایش</h4>
-            <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold">ذخیره خودکار فعال است</span>
           </div>
           <div className="space-y-4">
              {settings.map((s) => (
@@ -46,7 +81,7 @@ const SettingsSection: React.FC = () => {
         </section>
 
         <section>
-          <h4 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-6">اتصال پلتفرم‌ها</h4>
+          <h4 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-6">اتصال پلتفرم‌های خارجی</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              {[
                { name: 'اینستاگرام', status: 'متصل', icon: '📸' },
@@ -68,7 +103,7 @@ const SettingsSection: React.FC = () => {
         </section>
 
         <div className="pt-6 border-t border-slate-50">
-          <button className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-sm shadow-xl hover:bg-black transition-all transform active:scale-[0.98]">بروزرسانی نهایی تنظیمات</button>
+          <button className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-sm shadow-xl hover:bg-black transition-all">بروزرسانی نهایی تنظیمات</button>
         </div>
       </div>
     </div>

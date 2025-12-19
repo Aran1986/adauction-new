@@ -31,6 +31,19 @@ export enum DealStatus {
   DISPUTED = 'مورد اختلاف'
 }
 
+export interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp: string;
+  isAi?: boolean;
+}
+
+export interface Chat {
+  campaignId: string;
+  messages: Message[];
+}
+
 export interface PlatformStat {
   platform: Platform;
   followers: number;
@@ -88,6 +101,7 @@ export interface User {
 export interface Campaign {
   id: string;
   brandId: string;
+  influencerId?: string;
   title: string;
   description: string;
   budget: number;
